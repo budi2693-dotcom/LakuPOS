@@ -765,10 +765,10 @@ function DarkDashboard({
 // ─────────────────────────────────────────────
 // Light Module Wrapper (for existing light-theme components)
 // ─────────────────────────────────────────────
-function LightWrapper({ children }: { children: React.ReactNode }) {
+function LightWrapper({ children, scrollable = false }: { children: React.ReactNode, scrollable?: boolean }) {
   return (
     <div
-      className="h-full overflow-hidden flex flex-col"
+      className={`h-full flex flex-col ${scrollable ? 'overflow-y-auto custom-scrollbar p-4 md:p-6' : 'overflow-hidden'}`}
       style={{ background: '#f9fafb' }}
     >
       {children}
@@ -953,14 +953,14 @@ export default function Backoffice({
 
       case 'staff':
         return (
-          <LightWrapper>
+          <LightWrapper scrollable>
             <StaffManagement />
           </LightWrapper>
         );
 
       case 'pengaturan':
         return (
-          <LightWrapper>
+          <LightWrapper scrollable>
             <DatabaseSettings
               currentConfig={dbConfig}
               onConfigChange={onConfigChange}
@@ -971,7 +971,7 @@ export default function Backoffice({
 
       case 'generator':
         return (
-          <LightWrapper>
+          <LightWrapper scrollable>
             <DummyDataGenerator
               currentConfig={dbConfig}
               onGenerationComplete={onRefreshData}
