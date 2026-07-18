@@ -44,9 +44,12 @@ import {
 } from 'recharts';
 import { Product, Transaction, TransactionItem, StaffAccount, DatabaseConfig } from '../types';
 import SalesReport from './SalesReport';
+import { supabaseUpdateProduct, supabaseAddProducts } from '../lib/supabase';
+import { supabase } from '../lib/supabaseClient';
 import FinanceReport from './FinanceReport';
 import BarangList from './BarangList';
 import StaffManagement from './StaffManagement';
+import ProductImport from './ProductImport';
 import DatabaseSettings from './DatabaseSettings';
 import DummyDataGenerator from './DummyDataGenerator';
 
@@ -112,6 +115,7 @@ const SIDEBAR_MENU: NavItem[] = [
     label: 'DATABASE',
     children: [
       { id: 'produk', label: 'Barang atau Jasa' },
+      { id: 'import-produk', label: 'Import Produk' },
       { id: 'stok', label: 'Manajemen Stok' },
       { id: 'kategori', label: 'Kategori' },
       {
@@ -925,8 +929,33 @@ export default function Backoffice({
               onToggleSidebar={() => setIsSidebarOpen(true)}
               onAddProduct={onAddProduct}
               onEditProduct={onEditProduct}
+              onGoToImportProduk={() => setActiveModule('import-produk')}
             />
           </LightWrapper>
+        );
+
+      case 'import-produk':
+        return (
+          <ProductImport 
+            onBack={() => setActiveModule('produk')} 
+            onImportProducts={async (newProducts) => {
+              try {
+                // If using local storage fallback:
+                if (localStorage.getItem('lakupos_mode') !== 'supabase') {
+                   const existing = JSON.parse(localStorage.getItem('lakupos_products') || '[]');
+                   localStorage.setItem('lakupos_products', JSON.stringify([...existing, ...newProducts]));
+                   setProducts(prev => [...prev, ...newProducts]);
+                   alert("Berhasil simpan ke memori lokal.");
+                } else {
+                  await supabaseAddProducts(newProducts);
+                  setProducts(prev => [...prev, ...newProducts]);
+                }
+              } catch (e: any) {
+                console.error(e);
+                throw e; // throw error so ProductImport can show it
+              }
+            }}
+          />
         );
 
       case 'staff':

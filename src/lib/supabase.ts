@@ -248,10 +248,35 @@ export async function supabaseAddProduct(product: Product): Promise<void> {
     if (errStr.includes('use_stock') || error.code === '42703') {
       const { use_stock, ...withoutUseStock } = sanitized;
       const { error: retryError } = await client.from('products').insert([withoutUseStock]);
-      if (!retryError) return;
-      throw new Error(`Gagal menyimpan barang ke Supabase: ${retryError.message}`);
+      if (retryError) {
+        throw new Error(`Gagal menyimpan produk ke Supabase: ${retryError.message}`);
+      }
+    } else {
+      throw new Error(`Gagal menyimpan produk ke Supabase: ${error.message}`);
     }
-    throw new Error(`Gagal menyimpan barang ke Supabase: ${error.message}`);
+  }
+}
+
+export async function supabaseAddProducts(products: Product[]): Promise<void> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase client is not configured.');
+
+  const sanitized = products.map(sanitizeProductForSupabase);
+  
+  // Supabase insert supports an array of objects for bulk insert!
+  const { error } = await client.from('products').insert(sanitized);
+
+  if (error) {
+    const errStr = JSON.stringify(error).toLowerCase();
+    if (errStr.includes('use_stock') || error.code === '42703') {
+      const withoutUseStock = sanitized.map(({ use_stock, ...rest }) => rest);
+      const { error: retryError } = await client.from('products').insert(withoutUseStock);
+      if (retryError) {
+        throw new Error(`Gagal menyimpan produk massal ke Supabase: ${retryError.message}`);
+      }
+    } else {
+      throw new Error(`Gagal menyimpan produk massal ke Supabase: ${error.message}`);
+    }
   }
 }
 

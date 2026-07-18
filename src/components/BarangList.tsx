@@ -17,9 +17,10 @@ interface BarangListProps {
   onAddProduct: () => void;
   onEditProduct: (product: Product) => void;
   onToggleSidebar?: () => void;
+  onGoToImportProduk?: () => void;
 }
 
-export default function BarangList({ products, onBack, onAddProduct, onEditProduct, onToggleSidebar }: BarangListProps) {
+export default function BarangList({ products, onBack, onAddProduct, onEditProduct, onToggleSidebar, onGoToImportProduk }: BarangListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Semua item');
 
@@ -273,7 +274,12 @@ export default function BarangList({ products, onBack, onAddProduct, onEditProdu
                 </div>
               )}
             </div>
-            
+            <button 
+              onClick={onGoToImportProduk}
+              className="ml-2 hidden md:flex bg-white hover:bg-gray-50 text-[#00A980] font-bold py-2.5 px-4 rounded-xl shadow-sm border border-[#00A980] transition-colors text-[14px] items-center gap-2"
+            >
+              Import Produk Baru
+            </button>
             <button 
               onClick={onAddProduct}
               className="ml-2 hidden md:flex bg-[#0D9488] hover:bg-teal-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-sm transition-colors text-[15px] items-center gap-2"
