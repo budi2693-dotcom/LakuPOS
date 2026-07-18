@@ -927,7 +927,7 @@ export default function PointOfSale({
   };
 
   const lowStockCount = useMemo(() => {
-    return products.filter(p => p.product_type === 'physical' && p.stock <= 5).length;
+    return products.filter(p => p.product_type === 'physical' && p.use_stock !== false && p.stock <= 5).length;
   }, [products]);
 
   return (
@@ -979,7 +979,11 @@ export default function PointOfSale({
               <div className="flex-1 text-left min-w-0">
                 <h4 className="text-xs font-bold text-gray-900 truncate uppercase">{p.name}</h4>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className={`text-[10px] font-bold ${p.stock > 0 ? 'text-[#0D9488]' : 'text-red-500'}`}>Stok: {p.stock}</span>
+                  {p.use_stock !== false ? (
+                    <span className={`text-[10px] font-bold ${p.stock > 0 ? 'text-[#0D9488]' : 'text-red-500'}`}>Stok: {p.stock}</span>
+                  ) : (
+                    <span className="text-[10px] font-bold text-[#0D9488]">∞</span>
+                  )}
                   <span className="text-[10px] font-black text-gray-900">{formatShortRupiah(getUnitPriceForTier(p, 'Pcs', customerType))}</span>
                 </div>
               </div>
@@ -1205,7 +1209,7 @@ export default function PointOfSale({
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 max-w-5xl">
                 {filteredProducts.map((p) => {
                   const qtyInCart = getProductQtyInCart(p.id);
-                  const isOutOfStock = p.product_type === 'physical' && p.stock <= 0;
+                  const isOutOfStock = p.product_type === 'physical' && p.use_stock !== false && p.stock <= 0;
                   const price = getUnitPriceForTier(p, 'Pcs', customerType);
 
                   return (
@@ -1225,11 +1229,17 @@ export default function PointOfSale({
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-xs font-black text-gray-950 uppercase truncate leading-tight">{p.name}</h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`px-1.5 py-0.5 rounded-lg text-[9px] font-black uppercase ${p.stock > 0 ? 'bg-teal-50 text-[#0D9488]' : 'bg-red-50 text-red-600'}`}>
-                            {p.stock > 0 ? `Stok: ${p.stock}` : 'Habis'}
-                          </span>
-                          <span className="text-xs font-black text-gray-900 font-mono tracking-tighter">{formatShortRupiah(price)}</span>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          {p.use_stock !== false ? (
+                            <span className={`px-1.5 py-0.5 rounded-lg text-[9px] font-black uppercase ${p.stock > 0 ? 'bg-teal-50 text-[#0D9488]' : 'bg-red-50 text-red-600'}`}>
+                              {p.stock > 0 ? `Stok: ${p.stock}` : 'Habis'}
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded-lg text-[9px] font-black uppercase bg-teal-50 text-[#0D9488]">
+                              ∞ Stok
+                            </span>
+                          )}
+                          <span className="text-[11px] text-gray-400 line-through font-medium">Rp {p.price_sell.toLocaleString('id-ID')}</span>
                         </div>
                       </div>
                     </button>

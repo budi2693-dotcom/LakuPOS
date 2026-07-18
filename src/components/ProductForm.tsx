@@ -352,7 +352,7 @@ export default function ProductForm({
       price_sell_grosir: priceSellGrosir,
       price_sell_agen: priceSellAgen,
       price_tiers: priceTiers,
-      stock: useStock ? stock : 999999,
+      stock: useStock ? stock : 0,
       use_stock: useStock,
       min_stock: minStock,
       category,
@@ -647,14 +647,14 @@ export default function ProductForm({
             })()}
 
             <div className="space-y-4 pt-1 pb-1">
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className="flex items-center gap-3 cursor-pointer" onClick={(e) => { e.preventDefault(); setShowInTransaction(!showInTransaction); }}>
                 <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${showInTransaction ? 'bg-[#00A980] border-[#00A980]' : 'border-gray-300 bg-white'}`}>
                   {showInTransaction && <Check size={14} className="text-white" strokeWidth={3} />}
                 </div>
                 <span className="text-[14px] text-gray-800">Tampilkan di Transaksi</span>
               </label>
 
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className="flex items-center gap-3 cursor-pointer" onClick={(e) => { e.preventDefault(); setUseStock(!useStock); }}>
                 <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${useStock ? 'bg-[#00A980] border-[#00A980]' : 'border-gray-300 bg-white'}`}>
                   {useStock && <Check size={14} className="text-white" strokeWidth={3} />}
                 </div>
