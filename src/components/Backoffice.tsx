@@ -944,11 +944,10 @@ export default function Backoffice({
                 if (localStorage.getItem('lakupos_mode') !== 'supabase') {
                    const existing = JSON.parse(localStorage.getItem('lakupos_products') || '[]');
                    localStorage.setItem('lakupos_products', JSON.stringify([...existing, ...newProducts]));
-                   setProducts(prev => [...prev, ...newProducts]);
-                   alert("Berhasil simpan ke memori lokal.");
+                   await onRefreshData();
                 } else {
                   await supabaseAddProducts(newProducts);
-                  setProducts(prev => [...prev, ...newProducts]);
+                  await onRefreshData();
                 }
               } catch (e: any) {
                 console.error(e);
