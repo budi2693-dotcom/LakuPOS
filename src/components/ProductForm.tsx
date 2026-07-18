@@ -842,15 +842,62 @@ export default function ProductForm({
                   />
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-4 space-y-3">
                   <button
                     type="button"
-                    onClick={() => setShowPriceTypeModal(true)}
+                    onClick={() => {
+                      const type = 'Member';
+                      setSelectedType(type);
+                      setTempPriceValue(priceSellMember || priceSell);
+                      setTempTiers(priceTiers.filter(t => t.customerType === 'Langganan'));
+                      setNewTierMinQty(2);
+                      setNewTierPrice(Math.round((priceSellMember || priceSell) * 0.95));
+                      setShowPriceTypeModal(true);
+                    }}
                     className="w-full py-3.5 border border-[#00A980] rounded-xl flex flex-col items-center justify-center bg-white hover:bg-teal-50 transition-colors"
                   >
                     <span className="text-[#00A980] font-semibold text-[14px]">Tambah Tipe Harga</span>
                     <span className="text-gray-500 text-[12px]">((Wholesale / Retailer / Retail / Gojek))</span>
                   </button>
+
+                  {(priceSellMember > 0 || priceSellGrosir > 0 || priceSellAgen > 0 || priceTiers.length > 0) && (
+                    <div className="space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <div className="text-[12px] font-semibold text-gray-500 mb-1">Tipe Harga Tersimpan:</div>
+                      {priceSellMember > 0 && (
+                        <div className="flex justify-between items-center text-[12px] border-b border-gray-100 last:border-0 pb-1.5 last:pb-0 mb-1.5 last:mb-0">
+                          <span className="font-semibold text-gray-700">Member</span>
+                          <div className="text-right">
+                            <div className="font-bold text-gray-900">Rp {priceSellMember.toLocaleString('id-ID')}</div>
+                            {priceTiers.filter(t => t.customerType === 'Langganan').length > 0 && (
+                              <div className="text-[11px] text-[#00A980] mt-0.5">{priceTiers.filter(t => t.customerType === 'Langganan').length} Tingkat Grosir</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {priceSellGrosir > 0 && (
+                        <div className="flex justify-between items-center text-[12px] border-b border-gray-100 last:border-0 pb-1.5 last:pb-0 mb-1.5 last:mb-0">
+                          <span className="font-semibold text-gray-700">Grosir</span>
+                          <div className="text-right">
+                            <div className="font-bold text-gray-900">Rp {priceSellGrosir.toLocaleString('id-ID')}</div>
+                            {priceTiers.filter(t => t.customerType === 'Grosir').length > 0 && (
+                              <div className="text-[11px] text-[#00A980] mt-0.5">{priceTiers.filter(t => t.customerType === 'Grosir').length} Tingkat Grosir</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {priceSellAgen > 0 && (
+                        <div className="flex justify-between items-center text-[12px] border-b border-gray-100 last:border-0 pb-1.5 last:pb-0 mb-1.5 last:mb-0">
+                          <span className="font-semibold text-gray-700">Agen</span>
+                          <div className="text-right">
+                            <div className="font-bold text-gray-900">Rp {priceSellAgen.toLocaleString('id-ID')}</div>
+                            {priceTiers.filter(t => t.customerType === 'Agen').length > 0 && (
+                              <div className="text-[11px] text-[#00A980] mt-0.5">{priceTiers.filter(t => t.customerType === 'Agen').length} Tingkat Grosir</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-4 pb-16">
