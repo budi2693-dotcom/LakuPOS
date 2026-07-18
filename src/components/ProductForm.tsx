@@ -842,63 +842,99 @@ export default function ProductForm({
                   />
                 </div>
 
-                <div className="pt-4 space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const type = 'Member';
-                      setSelectedType(type);
-                      setTempPriceValue(priceSellMember || priceSell);
-                      setTempTiers(priceTiers.filter(t => t.customerType === 'Langganan'));
-                      setNewTierMinQty(2);
-                      setNewTierPrice(Math.round((priceSellMember || priceSell) * 0.95));
-                      setShowPriceTypeModal(true);
-                    }}
-                    className="w-full py-3.5 border border-[#00A980] rounded-xl flex flex-col items-center justify-center bg-white hover:bg-teal-50 transition-colors"
-                  >
-                    <span className="text-[#00A980] font-semibold text-[14px]">Tambah Tipe Harga</span>
-                    <span className="text-gray-500 text-[12px]">((Wholesale / Retailer / Retail / Gojek))</span>
-                  </button>
+                {(() => {
+                  const activeTypes = [
+                    { type: 'Member', label: 'Member', basePrice: priceSellMember, tiers: priceTiers.filter(t => t.customerType === 'Langganan') },
+                    { type: 'Grosir', label: 'Grosir', basePrice: priceSellGrosir, tiers: priceTiers.filter(t => t.customerType === 'Grosir') },
+                    { type: 'Agen', label: 'Agen', basePrice: priceSellAgen, tiers: priceTiers.filter(t => t.customerType === 'Agen') }
+                  ].filter(t => t.basePrice > 0);
 
-                  {(priceSellMember > 0 || priceSellGrosir > 0 || priceSellAgen > 0 || priceTiers.length > 0) && (
-                    <div className="space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                      <div className="text-[12px] font-semibold text-gray-500 mb-1">Tipe Harga Tersimpan:</div>
-                      {priceSellMember > 0 && (
-                        <div className="flex justify-between items-center text-[12px] border-b border-gray-100 last:border-0 pb-1.5 last:pb-0 mb-1.5 last:mb-0">
-                          <span className="font-semibold text-gray-700">Member</span>
-                          <div className="text-right">
-                            <div className="font-bold text-gray-900">Rp {priceSellMember.toLocaleString('id-ID')}</div>
-                            {priceTiers.filter(t => t.customerType === 'Langganan').length > 0 && (
-                              <div className="text-[11px] text-[#00A980] mt-0.5">{priceTiers.filter(t => t.customerType === 'Langganan').length} Tingkat Grosir</div>
-                            )}
-                          </div>
+                  return (
+                    <div className="pt-4 space-y-4">
+                      {activeTypes.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="font-semibold text-gray-900 text-[14px]">Daftar Tipe Harga</div>
+                          {activeTypes.map((item, idx) => (
+                            <div key={idx} className="border border-gray-100 rounded-xl bg-white overflow-hidden shadow-[0_2px_8px_rgb(0,0,0,0.04)]">
+                              <div className="p-4 space-y-3">
+                                <div className="font-bold text-[16px] text-gray-900">{item.label}</div>
+                                <div>
+                                  <div className="flex justify-between text-[12px] text-gray-500 mb-1">
+                                    <span>Jumlah Minimal</span>
+                                    <span>Harga jual/ perbarang</span>
+                                  </div>
+                                  <div className="flex justify-between text-[13px] text-gray-800 font-medium py-1.5">
+                                    <span>1</span>
+                                    <span className="font-bold text-gray-900">Rp {item.basePrice.toLocaleString('id-ID')}</span>
+                                  </div>
+                                  {item.tiers.map((t, i) => (
+                                    <div key={i} className="flex justify-between text-[13px] text-gray-800 font-medium py-1.5">
+                                      <span>{t.minQty}</span>
+                                      <span className="font-bold text-gray-900">Rp {t.price.toLocaleString('id-ID')}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center px-4 py-3 border-t border-gray-100 bg-white">
+                                <button 
+                                  type="button" 
+                                  onClick={() => {
+                                    if (confirm(`Hapus tipe harga ${item.label}?`)) {
+                                      if (item.type === 'Member') setPriceSellMember(0);
+                                      if (item.type === 'Grosir') setPriceSellGrosir(0);
+                                      if (item.type === 'Agen') setPriceSellAgen(0);
+                                      const mapType = item.type === 'Member' ? 'Langganan' : item.type;
+                                      setPriceTiers(prev => prev.filter(t => t.customerType !== mapType));
+                                    }
+                                  }}
+                                  className="flex items-center gap-1.5 text-red-500 font-medium text-[13px]"
+                                >
+                                  Hapus Data <Trash2 size={16} />
+                                </button>
+                                <button 
+                                  type="button" 
+                                  onClick={() => {
+                                    setSelectedType(item.type as any);
+                                    setTempPriceValue(item.basePrice);
+                                    setTempTiers(item.tiers);
+                                    setNewTierMinQty(2);
+                                    setNewTierPrice(Math.round(item.basePrice * 0.95));
+                                    setShowPriceTypeModal(true);
+                                  }}
+                                  className="flex items-center gap-1.5 text-[#00A980] font-medium text-[13px]"
+                                >
+                                  Edit <Edit2 size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       )}
-                      {priceSellGrosir > 0 && (
-                        <div className="flex justify-between items-center text-[12px] border-b border-gray-100 last:border-0 pb-1.5 last:pb-0 mb-1.5 last:mb-0">
-                          <span className="font-semibold text-gray-700">Grosir</span>
-                          <div className="text-right">
-                            <div className="font-bold text-gray-900">Rp {priceSellGrosir.toLocaleString('id-ID')}</div>
-                            {priceTiers.filter(t => t.customerType === 'Grosir').length > 0 && (
-                              <div className="text-[11px] text-[#00A980] mt-0.5">{priceTiers.filter(t => t.customerType === 'Grosir').length} Tingkat Grosir</div>
-                            )}
-                          </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <div>
+                          <div className="text-[14px] font-semibold text-gray-900">Tambah Tipe Harga</div>
+                          <div className="text-[12px] text-gray-500 mt-0.5">Grosir / Retailer / Eceran / Gojek</div>
                         </div>
-                      )}
-                      {priceSellAgen > 0 && (
-                        <div className="flex justify-between items-center text-[12px] border-b border-gray-100 last:border-0 pb-1.5 last:pb-0 mb-1.5 last:mb-0">
-                          <span className="font-semibold text-gray-700">Agen</span>
-                          <div className="text-right">
-                            <div className="font-bold text-gray-900">Rp {priceSellAgen.toLocaleString('id-ID')}</div>
-                            {priceTiers.filter(t => t.customerType === 'Agen').length > 0 && (
-                              <div className="text-[11px] text-[#00A980] mt-0.5">{priceTiers.filter(t => t.customerType === 'Agen').length} Tingkat Grosir</div>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const type = 'Member';
+                            setSelectedType(type);
+                            setTempPriceValue(priceSellMember || priceSell);
+                            setTempTiers(priceTiers.filter(t => t.customerType === 'Langganan'));
+                            setNewTierMinQty(2);
+                            setNewTierPrice(Math.round((priceSellMember || priceSell) * 0.95));
+                            setShowPriceTypeModal(true);
+                          }}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-[#DCFCE7] text-[#00A980] rounded-lg font-bold text-[13px] hover:bg-green-200 transition-colors"
+                        >
+                          <Plus size={16} /> Tambah
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
 
                 <div className="pt-4 pb-16">
                   <button
