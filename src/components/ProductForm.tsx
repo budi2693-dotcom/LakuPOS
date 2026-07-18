@@ -568,7 +568,7 @@ export default function ProductForm({
                 <div className="space-y-2">
                   <div 
                     onClick={isMultisatuanDisabled ? undefined : handleOpenUnitsModal} 
-                    className={`p-4 rounded-xl flex items-center gap-4 border transition-colors ${
+                    className={`p-4 rounded-xl flex items-start gap-4 border transition-colors ${
                       isMultisatuanDisabled 
                         ? 'bg-gray-100 border-gray-200 opacity-70 cursor-not-allowed' 
                         : 'bg-[#DCFCE7] border-green-200 cursor-pointer hover:bg-green-100'
@@ -579,10 +579,31 @@ export default function ProductForm({
                     }`}>
                       <Package size={20} />
                     </div>
-                    <div>
-                      <div className={`text-[14px] font-semibold ${isMultisatuanDisabled ? 'text-gray-600' : 'text-gray-900'}`}>Tambah Multisatuan</div>
-                      <div className="text-[12px] text-gray-500">(PCS/ Lusin/ Dus)</div>
-                    </div>
+                    {units.length > 0 ? (
+                      <div className="flex-1 w-full">
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="text-[14px] font-bold text-gray-900">Pengaturan Multisatuan</div>
+                          <div className="text-[11px] font-bold text-[#00A980] bg-white px-2 py-0.5 rounded-full border border-green-200 shadow-sm">{units.length} Satuan</div>
+                        </div>
+                        <div className="space-y-1.5 mt-2">
+                          {units.map((u, idx) => (
+                            <div key={idx} className="flex justify-between items-center text-[12px] border-t border-green-200 pt-1.5">
+                              <span className="font-semibold text-gray-700">
+                                {u.unitName} {u.conversionMultiplier > 1 ? <span className="text-gray-500 font-normal ml-1">(Isi {u.conversionMultiplier} {units[0].unitName})</span> : ''}
+                              </span>
+                              <span className="font-bold text-gray-900">Rp {u.price_sell_umum.toLocaleString('id-ID')}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center h-8">
+                        <div>
+                          <div className={`text-[14px] font-semibold ${isMultisatuanDisabled ? 'text-gray-600' : 'text-gray-900'}`}>Tambah Multisatuan</div>
+                          <div className="text-[12px] text-gray-500">(PCS/ Lusin/ Dus)</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {isMultisatuanDisabled && (
                     <p className="text-[12px] text-red-500 px-1">
