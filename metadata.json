@@ -1,0 +1,6 @@
+{
+  "name": "Veloce POS & Backoffice",
+  "description": "Sistem kasir dan manajemen barang grosir profesional dengan dukungan multi-satuan, tipe harga multi-tingkat, konversi stok otomatis, pencarian/pemindaian SKU barcode sekunder, dan sinkronisasi cloud Supabase.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
