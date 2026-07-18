@@ -369,6 +369,42 @@ export async function supabaseDeleteStaffAccount(id: string): Promise<void> {
 
 // === TRANSACTIONS SUPABASE API ===
 
+function sanitizeTransactionForSupabase(tx: Transaction): any {
+  return {
+    id: tx.id,
+    invoicenumber: tx.invoiceNumber,
+    date: tx.date,
+    items: tx.items,
+    totalitems: tx.totalItems,
+    totalamount: tx.totalAmount,
+    amountpaid: tx.amountPaid,
+    changeamount: tx.changeAmount,
+    paymentmethod: tx.paymentMethod,
+    customertype: tx.customerType,
+    customername: tx.customerName,
+    discounttotal: tx.discountTotal,
+    cashiername: tx.cashierName
+  };
+}
+
+function mapSupabaseToTransaction(row: any): Transaction {
+  return {
+    id: row.id,
+    invoiceNumber: row.invoicenumber || row.invoiceNumber,
+    date: row.date,
+    items: row.items,
+    totalItems: row.totalitems || row.totalItems,
+    totalAmount: row.totalamount || row.totalAmount,
+    amountPaid: row.amountpaid || row.amountPaid,
+    changeAmount: row.changeamount || row.changeAmount,
+    paymentMethod: row.paymentmethod || row.paymentMethod,
+    customerType: row.customertype || row.customerType,
+    customerName: row.customername || row.customerName,
+    discountTotal: row.discounttotal || row.discountTotal,
+    cashierName: row.cashiername || row.cashierName
+  };
+}
+
 export async function supabaseGetTransactions(): Promise<Transaction[]> {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase client is not configured.');
@@ -382,14 +418,15 @@ export async function supabaseGetTransactions(): Promise<Transaction[]> {
     throw new Error(`Gagal mengambil transaksi dari Supabase: ${error.message}`);
   }
 
-  return data as Transaction[];
+  return (data as any[]).map(mapSupabaseToTransaction);
 }
 
 export async function supabaseAddTransaction(tx: Transaction): Promise<void> {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase client is not configured.');
 
-  const { error } = await client.from('transactions').insert([tx]);
+  const sanitized = sanitizeTransactionForSupabase(tx);
+  const { error } = await client.from('transactions').insert([sanitized]);
 
   if (error) {
     throw new Error(`Gagal menyimpan transaksi ke Supabase: ${error.message}`);
