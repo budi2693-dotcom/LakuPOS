@@ -30,7 +30,7 @@ import {
   supabaseAddProduct,
   supabaseUpdateProduct,
   supabaseDeleteProduct,
-  supabaseBulkAddProducts,
+  supabaseAddProducts,
   loadDbConfig,
   supabaseGetStaffAccounts,
   supabaseAddStaffAccount,
@@ -95,7 +95,7 @@ export async function getProducts(): Promise<Product[]> {
     await localBulkAddProducts(updatedList);
     if (config.mode === 'supabase') {
       try {
-        await supabaseBulkAddProducts(updatedList);
+        await supabaseAddProducts(updatedList);
       } catch (e) {
         console.error('Failed to sync migrated IDs to Supabase:', e);
       }
@@ -117,6 +117,22 @@ export async function addProduct(product: Product): Promise<void> {
       await supabaseAddProduct(product);
     } catch (err) {
       console.error('Failed to write to Supabase, written to local IndexedDB only:', err);
+      throw err;
+    }
+  }
+}
+
+export async function addProducts(products: Product[]): Promise<void> {
+  const config = loadDbConfig();
+  
+  await localBulkAddProducts(products);
+
+  if (config.mode === 'supabase') {
+    try {
+      // Note: we need to import supabaseAddProducts at the top if it's not imported
+      await supabaseAddProducts(products);
+    } catch (err) {
+      console.error('Failed to bulk write to Supabase, written to local IndexedDB only:', err);
       throw err;
     }
   }
@@ -164,7 +180,7 @@ export async function syncLocalToSupabase(): Promise<{ successCount: number; err
       return { successCount: 0 };
     }
 
-    await supabaseBulkAddProducts(localProducts);
+    await supabaseAddProducts(localProducts);
     return { successCount: localProducts.length };
   } catch (err: any) {
     console.error('Error syncing local to Supabase:', err);

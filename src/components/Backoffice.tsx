@@ -44,8 +44,9 @@ import {
 } from 'recharts';
 import { Product, Transaction, TransactionItem, StaffAccount, DatabaseConfig } from '../types';
 import SalesReport from './SalesReport';
-import { supabaseUpdateProduct, supabaseAddProducts } from '../lib/supabase';
+import { supabaseUpdateProduct } from '../lib/supabase';
 import { supabase } from '../lib/supabaseClient';
+import { addProducts } from '../lib/dbManager';
 import FinanceReport from './FinanceReport';
 import BarangList from './BarangList';
 import StaffManagement from './StaffManagement';
@@ -940,15 +941,8 @@ export default function Backoffice({
             onBack={() => setActiveModule('produk')} 
             onImportProducts={async (newProducts) => {
               try {
-                // If using local storage fallback:
-                if (localStorage.getItem('lakupos_mode') !== 'supabase') {
-                   const existing = JSON.parse(localStorage.getItem('lakupos_products') || '[]');
-                   localStorage.setItem('lakupos_products', JSON.stringify([...existing, ...newProducts]));
-                   await onRefreshData();
-                } else {
-                  await supabaseAddProducts(newProducts);
-                  await onRefreshData();
-                }
+                await addProducts(newProducts);
+                await onRefreshData();
               } catch (e: any) {
                 console.error(e);
                 throw e; // throw error so ProductImport can show it
