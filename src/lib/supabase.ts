@@ -102,6 +102,10 @@ CREATE TABLE IF NOT EXISTS public.products (
     use_stock BOOLEAN DEFAULT true,
     units JSONB DEFAULT '[]'::jsonb,
     bundle_items JSONB DEFAULT '[]'::jsonb,
+    price_tiers JSONB DEFAULT '[]'::jsonb,
+    discount NUMERIC(12, 2) DEFAULT 0.00,
+    discount_type VARCHAR(10) DEFAULT '%',
+    show_in_transaction BOOLEAN DEFAULT true,
     location VARCHAR(255),
     image_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -180,7 +184,11 @@ ADD COLUMN IF NOT EXISTS price_sell_agen NUMERIC(12, 2) DEFAULT 0.00,
 ADD COLUMN IF NOT EXISTS product_type VARCHAR(50) DEFAULT 'physical',
 ADD COLUMN IF NOT EXISTS use_stock BOOLEAN DEFAULT true,
 ADD COLUMN IF NOT EXISTS units JSONB DEFAULT '[]'::jsonb,
-ADD COLUMN IF NOT EXISTS bundle_items JSONB DEFAULT '[]'::jsonb;
+ADD COLUMN IF NOT EXISTS bundle_items JSONB DEFAULT '[]'::jsonb,
+ADD COLUMN IF NOT EXISTS price_tiers JSONB DEFAULT '[]'::jsonb,
+ADD COLUMN IF NOT EXISTS discount NUMERIC(12, 2) DEFAULT 0.00,
+ADD COLUMN IF NOT EXISTS discount_type VARCHAR(10) DEFAULT '%',
+ADD COLUMN IF NOT EXISTS show_in_transaction BOOLEAN DEFAULT true;
 
 -- Muat ulang cache schema PostgREST Supabase agar mendeteksi kolom baru secara instan
 NOTIFY pgrst, 'reload schema';
@@ -225,8 +233,7 @@ export async function supabaseGetProducts(): Promise<Product[]> {
 }
 
 function sanitizeProductForSupabase(product: Product): any {
-  const { price_tiers, ...rest } = product as any;
-  return rest;
+  return { ...product } as any;
 }
 
 export async function supabaseAddProduct(product: Product): Promise<void> {

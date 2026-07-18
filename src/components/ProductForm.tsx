@@ -49,7 +49,7 @@ export default function ProductForm({
   const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState('');
   const [discount, setDiscount] = useState(0);
-  const [discountType, setDiscountType] = useState<'%'>('%'); // or 'Rp'
+  const [discountType, setDiscountType] = useState<'%' | 'Rp'>('%');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -183,6 +183,9 @@ export default function ProductForm({
       setPriceSellAgen(product.price_sell_agen || 0);
       setPriceTiers(product.price_tiers || []);
       setUseStock(product.use_stock !== false);
+      setDiscount(product.discount || 0);
+      setDiscountType((product.discount_type === 'Rp' ? 'Rp' : '%'));
+      setShowInTransaction(product.show_in_transaction !== false);
       
       if (product.units && product.units.length > 0) {
         setProductType('Multisatuan');
@@ -354,6 +357,9 @@ export default function ProductForm({
       min_stock: minStock,
       category,
       location,
+      discount,
+      discount_type: discountType,
+      show_in_transaction: showInTransaction,
       image_url: imageUrl,
       product_type: productType === 'Paket' ? 'bundle' : 'physical',
       units: productType === 'Multisatuan' ? units : [],

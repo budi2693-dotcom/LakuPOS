@@ -44,9 +44,12 @@ export interface Product {
   use_stock?: boolean;
   units?: ProductUnit[];
   bundle_items?: BundleItem[];
+  discount?: number;
+  discount_type?: string;
   location?: string; // Storage/shelf location
   image_url?: string;
   created_at?: string;
+  show_in_transaction?: boolean;
 }
 
 export interface InventoryStats {
