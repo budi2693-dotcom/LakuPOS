@@ -272,8 +272,8 @@ export default function ProductImport({ onBack, onImportProducts }: ProductImpor
   };
 
   return (
-    <div className="bg-white min-h-[calc(100vh-64px)] rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col">
-      <div className="bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+    <div className="bg-white h-full rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col">
+      <div className="bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0 z-10 shadow-sm">
         <div className="flex items-center gap-4">
           <button 
             onClick={onBack}
@@ -294,7 +294,7 @@ export default function ProductImport({ onBack, onImportProducts }: ProductImpor
         </div>
       </div>
 
-      <div className="p-8 max-w-5xl">
+      <div className="p-8 max-w-5xl flex-1 overflow-y-auto custom-scrollbar">
         <div className="bg-[#E6F7F5] border border-[#BDE5DF] rounded-lg p-4 mb-8 flex gap-3 text-[#008A69]">
           <AlertTriangle size={20} className="shrink-0 mt-0.5" />
           <p className="text-[14px]">
