@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { ArrowLeft, Download, FileSpreadsheet, Upload, CheckCircle, AlertTriangle } from 'lucide-react';
 import * as xlsx from 'xlsx';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 import { Product } from '../types';
 
 // Helper to generate UUID v4
@@ -163,35 +165,106 @@ export default function ProductImport({ onBack, onImportProducts }: ProductImpor
     }
   };
 
-  const downloadTemplate = () => {
-    const wsData = [
-      ['alasan_gagal', 'data_kode_barang', 'data_nama_barang', 'data_harga_beli', 'data_harga_jual', 'data_stok', 'data_barang_jasa', 'data_show_toko', 'minimum_stok', 'tipe_diskon', 'diskon', 'berat_dan_satuan', 'berat', 'letak_rak', 'keterangan', 'kategori', 'gambar'],
-      [
-        'Abaikan kolom ini.', 
-        'Masukkan kode barang unik (Wajib)', 
-        'Nama barang maksimal 80 karakter (Wajib)', 
-        'Harga beli modal (Wajib)', 
-        'Harga jual ke pelanggan (Wajib)', 
-        'Jumlah stok (Wajib)', 
-        '0 = Punya stok, 1 = Jasa/Unlimited (Wajib)', 
-        '0 = Tampil, 1 = Sembunyikan (Wajib)', 
-        'Batas minimum stok untuk pengingat', 
-        '0 = %, 1 = Rp', 
-        'Angka diskon (Misal 10)', 
-        'Contoh: PCS', 
-        'Berat dalam gram', 
-        'Lokasi di gudang/toko', 
-        'Penjelasan produk', 
-        'Kelompok produk', 
-        'Abaikan'
-      ]
+  const downloadTemplate = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('barang');
+
+    const columns = [
+      { header: 'alasan_gagal', key: 'alasan_gagal', width: 20 },
+      { header: 'data_kode_barang', key: 'data_kode_barang', width: 25 },
+      { header: 'data_nama_barang', key: 'data_nama_barang', width: 35 },
+      { header: 'data_harga_beli', key: 'data_harga_beli', width: 20 },
+      { header: 'data_harga_jual', key: 'data_harga_jual', width: 20 },
+      { header: 'data_stok', key: 'data_stok', width: 15 },
+      { header: 'data_barang_jasa', key: 'data_barang_jasa', width: 20 },
+      { header: 'data_show_toko', key: 'data_show_toko', width: 20 },
+      { header: 'minimum_stok', key: 'minimum_stok', width: 15 },
+      { header: 'tipe_diskon', key: 'tipe_diskon', width: 15 },
+      { header: 'diskon', key: 'diskon', width: 15 },
+      { header: 'berat_dan_satuan', key: 'berat_dan_satuan', width: 20 },
+      { header: 'berat', key: 'berat', width: 15 },
+      { header: 'letak_rak', key: 'letak_rak', width: 15 },
+      { header: 'keterangan', key: 'keterangan', width: 30 },
+      { header: 'kategori', key: 'kategori', width: 20 },
+      { header: 'gambar', key: 'gambar', width: 15 },
+    ];
+    worksheet.columns = columns;
+
+    const headerRow = worksheet.getRow(1);
+    const mandatoryCols = ['data_kode_barang', 'data_harga_jual', 'data_nama_barang', 'data_stok'];
+    
+    headerRow.eachCell((cell, colNumber) => {
+      const colKey = columns[colNumber - 1].key;
+      if (mandatoryCols.includes(colKey)) {
+        cell.font = { bold: true, color: { argb: 'FFFF0000' } };
+      } else {
+        cell.font = { bold: true };
+      }
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFEEEEEE' }
+      };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+
+    const instructions = [
+      'Abaikan kolom ini.', 
+      'Masukkan kode barang unik (Wajib)', 
+      'Nama barang maksimal 80 karakter (Wajib)', 
+      'Harga beli modal (Wajib)', 
+      'Harga jual ke pelanggan (Wajib)', 
+      'Jumlah stok (Wajib)', 
+      '0 = Punya stok, 1 = Jasa/Unlimited (Wajib)', 
+      '0 = Tampil, 1 = Sembunyikan (Wajib)', 
+      'Batas minimum stok untuk pengingat', 
+      '0 = %, 1 = Rp', 
+      'Angka diskon (Misal 10)', 
+      'Contoh: PCS', 
+      'Berat dalam gram', 
+      'Lokasi di gudang/toko', 
+      'Penjelasan produk', 
+      'Kelompok produk', 
+      'Abaikan'
     ];
     
-    const ws = xlsx.utils.aoa_to_sheet(wsData);
-    const wb = xlsx.utils.book_new();
-    xlsx.utils.book_append_sheet(wb, ws, "barang");
+    const instrRow = worksheet.addRow(instructions);
+    instrRow.font = { italic: true, color: { argb: 'FF555555' } };
+    instrRow.eachCell((cell) => {
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFFFFCC' }
+      };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+      cell.alignment = { wrapText: true, vertical: 'top' };
+    });
     
-    xlsx.writeFile(wb, "TEMPLATE_BARANG_LAKUPOS.xlsx");
+    const example = [
+      '', 'SKU-1001', 'Contoh Barang', '10000', '15000', '50', '0', '0', '5', '0', '10', 'PCS', '200', 'Rak A1', 'Barang bagus', 'Umum', ''
+    ];
+    const exampleRow = worksheet.addRow(example);
+    exampleRow.eachCell((cell) => {
+      cell.border = {
+        top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' }
+      };
+    });
+
+    worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 2 }];
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, 'TEMPLATE_BARANG_LAKUPOS.xlsx');
   };
 
   return (
