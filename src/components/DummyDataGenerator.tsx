@@ -18,6 +18,7 @@ import { Product, DatabaseConfig } from '../types';
 import { generateBulkDummyProducts } from '../data';
 import { localBulkAddProducts } from '../lib/indexedDb';
 import { supabaseBulkAddProducts } from '../lib/supabase';
+import { clearProducts } from '../lib/dbManager';
 
 interface DummyDataGeneratorProps {
   currentConfig: DatabaseConfig;
@@ -87,6 +88,28 @@ export default function DummyDataGenerator({
         setIsRunning(false);
       }
     }, 300);
+  };
+
+  const handleClearAll = async () => {
+    if (!confirm('AWAS: Ini akan menghapus SELURUH data barang dari sistem, baik lokal maupun cloud. Anda yakin?')) {
+      return;
+    }
+
+    setIsRunning(true);
+    setLogs([]);
+    setStats(null);
+    addLog('Menghapus semua data barang dari database...');
+
+    try {
+      await clearProducts();
+      addLog('Semua data barang berhasil dihapus!');
+      onGenerationComplete();
+    } catch (err: any) {
+      console.error(err);
+      addLog(`Gagal menghapus data: ${err.message || err}`);
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   return (
@@ -169,6 +192,15 @@ export default function DummyDataGenerator({
                 <span>Hasilkan {amount.toLocaleString('id-ID')} Barang Dummy Instan</span>
               </>
             )}
+          </button>
+          
+          <button
+            type="button"
+            onClick={handleClearAll}
+            disabled={isRunning}
+            className="w-full py-2 bg-white border border-red-200 hover:bg-red-50 text-red-600 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50 cursor-pointer mt-2"
+          >
+            Hapus Semua Data Barang
           </button>
         </div>
 

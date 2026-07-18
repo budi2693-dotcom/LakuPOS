@@ -298,10 +298,25 @@ export async function supabaseUpdateProduct(product: Product): Promise<void> {
         .from('products')
         .update(withoutUseStock)
         .eq('id', product.id);
-      if (!retryError) return;
-      throw new Error(`Gagal memperbarui barang di Supabase: ${retryError.message}`);
+      if (retryError) {
+        throw new Error(`Gagal memperbarui produk di Supabase: ${retryError.message}`);
+      }
+    } else {
+      throw new Error(`Gagal memperbarui produk di Supabase: ${error.message}`);
     }
-    throw new Error(`Gagal memperbarui barang di Supabase: ${error.message}`);
+  }
+}
+
+export async function supabaseClearProducts(): Promise<void> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase client is not configured.');
+
+  // Note: Supabase REST requires a filter to delete multiple records. 
+  // We use neq with a dummy UUID to match all records.
+  const { error } = await client.from('products').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+  if (error) {
+    throw new Error(`Gagal menghapus seluruh data produk: ${error.message}`);
   }
 }
 

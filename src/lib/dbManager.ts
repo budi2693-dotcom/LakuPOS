@@ -31,6 +31,7 @@ import {
   supabaseUpdateProduct,
   supabaseDeleteProduct,
   supabaseAddProducts,
+  supabaseClearProducts,
   loadDbConfig,
   supabaseGetStaffAccounts,
   supabaseAddStaffAccount,
@@ -165,6 +166,22 @@ export async function deleteProduct(id: string): Promise<void> {
       await supabaseDeleteProduct(id);
     } catch (err) {
       console.error('Failed to delete from Supabase, deleted from local IndexedDB only:', err);
+      throw err;
+    }
+  }
+}
+
+export async function clearProducts(): Promise<void> {
+  const config = loadDbConfig();
+  
+  // Clear from local DB
+  await localClearProducts();
+
+  if (config.mode === 'supabase') {
+    try {
+      await supabaseClearProducts();
+    } catch (err) {
+      console.error('Failed to clear Supabase, cleared local IndexedDB only:', err);
       throw err;
     }
   }
