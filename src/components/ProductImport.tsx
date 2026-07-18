@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { ArrowLeft, Download, FileSpreadsheet, Upload, CheckCircle, AlertTriangle } from 'lucide-react';
 import * as xlsx from 'xlsx';
 import ExcelJS from 'exceljs';
-import { saveAs } from 'file-saver';
 import { Product } from '../types';
 
 // Helper to generate UUID v4
@@ -264,7 +263,12 @@ export default function ProductImport({ onBack, onImportProducts }: ProductImpor
 
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    saveAs(blob, 'TEMPLATE_BARANG_LAKUPOS.xlsx');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'TEMPLATE_BARANG_LAKUPOS.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
