@@ -13,6 +13,7 @@ import {
   Check,
   AlertTriangle,
   ChevronDown,
+  ChevronUp,
   Package
 } from 'lucide-react';
 import { Product, ProductUnit, BundleItem, PriceTier } from '../types';
@@ -566,45 +567,70 @@ export default function ProductForm({
               const isMultisatuanDisabled = !sku.trim() || priceSell <= 0;
               return (
                 <div className="space-y-2">
-                  <div 
-                    onClick={isMultisatuanDisabled ? undefined : handleOpenUnitsModal} 
-                    className={`p-4 rounded-xl flex items-start gap-4 border transition-colors ${
-                      isMultisatuanDisabled 
-                        ? 'bg-gray-100 border-gray-200 opacity-70 cursor-not-allowed' 
-                        : 'bg-[#DCFCE7] border-green-200 cursor-pointer hover:bg-green-100'
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded flex items-center justify-center shrink-0 text-white ${
-                      isMultisatuanDisabled ? 'bg-gray-400' : 'bg-[#00A980]'
-                    }`}>
-                      <Package size={20} />
-                    </div>
-                    {units.length > 0 ? (
-                      <div className="flex-1 w-full">
-                        <div className="flex justify-between items-center mb-1">
-                          <div className="text-[14px] font-bold text-gray-900">Pengaturan Multisatuan</div>
-                          <div className="text-[11px] font-bold text-[#00A980] bg-white px-2 py-0.5 rounded-full border border-green-200 shadow-sm">{units.length} Satuan</div>
-                        </div>
-                        <div className="space-y-1.5 mt-2">
-                          {units.map((u, idx) => (
-                            <div key={idx} className="flex justify-between items-center text-[12px] border-t border-green-200 pt-1.5">
-                              <span className="font-semibold text-gray-700">
-                                {u.unitName} {u.conversionMultiplier > 1 ? <span className="text-gray-500 font-normal ml-1">(Isi {u.conversionMultiplier} {units[0].unitName})</span> : ''}
-                              </span>
-                              <span className="font-bold text-gray-900">Rp {u.price_sell_umum.toLocaleString('id-ID')}</span>
+                  {units.length > 0 ? (
+                    <div className="w-full border border-gray-200 rounded-lg bg-white overflow-hidden mt-1">
+                      <div className="p-4 space-y-4">
+                        <div className="text-[13px] text-gray-500 font-medium">Data Satuan</div>
+                        
+                        {units.map((u, idx) => (
+                          <div key={idx} className="border-b border-gray-100 last:border-0 pb-3 mb-3 last:pb-0 last:mb-0 relative">
+                            <div className="flex justify-between items-start mb-1">
+                              <span className="font-bold text-[14px] text-gray-900">{u.unitName}</span>
+                              {idx > 0 && (
+                                <button type="button" onClick={(e) => { e.stopPropagation(); setUnits(prev => prev.filter((_, i) => i !== idx)); }} className="text-red-500 hover:bg-red-50 p-1.5 rounded">
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
                             </div>
-                          ))}
-                        </div>
+                            <div className="flex justify-between text-[13px] text-gray-500 mt-2">
+                               <div className="flex flex-col">
+                                 <span className="text-[12px] text-gray-400">Kode</span>
+                                 <span className="text-gray-700 font-medium">{u.sku_unit || '-'}</span>
+                               </div>
+                               <div className="flex flex-col items-center">
+                                 <span className="text-[12px] text-gray-400">Jumlah</span>
+                                 <span className="text-gray-700 font-medium">{u.conversionMultiplier}</span>
+                               </div>
+                               <div className="flex flex-col items-end">
+                                 <span className="text-[12px] text-gray-400">Harga Jual</span>
+                                 <span className="text-gray-700 font-medium">Rp {u.price_sell_umum.toLocaleString('id-ID')}</span>
+                               </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ) : (
+                      
+                      <div className="flex justify-between items-center px-4 py-3 border-t border-gray-200 bg-gray-50/50">
+                        <button type="button" onClick={(e) => { e.stopPropagation(); if (confirm('Hapus semua data satuan?')) setUnits([]); }} className="flex items-center gap-2 text-red-500 font-bold text-[13px]">
+                          Hapus Data <Trash2 size={16} />
+                        </button>
+                        <button type="button" onClick={handleOpenUnitsModal} className="flex items-center gap-2 text-[#00A980] font-bold text-[13px]">
+                          Edit <Edit2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={isMultisatuanDisabled ? undefined : handleOpenUnitsModal} 
+                      className={`p-4 rounded-xl flex items-center gap-4 border transition-colors ${
+                        isMultisatuanDisabled 
+                          ? 'bg-gray-100 border-gray-200 opacity-70 cursor-not-allowed' 
+                          : 'bg-[#DCFCE7] border-green-200 cursor-pointer hover:bg-green-100'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded flex items-center justify-center shrink-0 text-white ${
+                        isMultisatuanDisabled ? 'bg-gray-400' : 'bg-[#00A980]'
+                      }`}>
+                        <Package size={20} />
+                      </div>
                       <div className="flex items-center h-8">
                         <div>
                           <div className={`text-[14px] font-semibold ${isMultisatuanDisabled ? 'text-gray-600' : 'text-gray-900'}`}>Tambah Multisatuan</div>
                           <div className="text-[12px] text-gray-500">(PCS/ Lusin/ Dus)</div>
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                   {isMultisatuanDisabled && (
                     <p className="text-[12px] text-red-500 px-1">
                       *Silakan isi Kode Barang dan Harga Jual terlebih dahulu
@@ -776,6 +802,65 @@ export default function ProductForm({
                       className="w-full p-3 border border-gray-300 rounded-lg text-[14px] focus:outline-none focus:border-[#00A980]"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-1.5 pt-2">
+                  <label className="text-[13px] font-medium text-gray-700">Diskon</label>
+                  <div className="flex">
+                    <input
+                      type="number"
+                      value={discount || ''}
+                      onChange={(e) => setDiscount(Math.max(0, parseInt(e.target.value) || 0))}
+                      placeholder="Masukkan diskon"
+                      className="flex-1 p-3 border border-gray-300 rounded-l-lg text-[14px] focus:outline-none focus:border-[#00A980]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setDiscountType('%')}
+                      className={`px-4 text-[14px] font-medium transition-colors border-y ${discountType === '%' ? 'bg-[#00A980] text-white border-[#00A980]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-300'}`}
+                    >
+                      %
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDiscountType('Rp')}
+                      className={`px-4 text-[14px] font-medium rounded-r-lg transition-colors border border-l-0 ${discountType === 'Rp' ? 'bg-[#00A980] text-white border-[#00A980]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-300'}`}
+                    >
+                      Rp
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 pt-2">
+                  <label className="text-[13px] font-medium text-gray-700">Keterangan</label>
+                  <input
+                    type="text"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Keterangan"
+                    className="w-full p-3 border border-gray-300 rounded-lg text-[14px] focus:outline-none focus:border-[#00A980]"
+                  />
+                </div>
+
+                <div className="pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowPriceTypeModal(true)}
+                    className="w-full py-3.5 border border-[#00A980] rounded-xl flex flex-col items-center justify-center bg-white hover:bg-teal-50 transition-colors"
+                  >
+                    <span className="text-[#00A980] font-semibold text-[14px]">Tambah Tipe Harga</span>
+                    <span className="text-gray-500 text-[12px]">((Wholesale / Retailer / Retail / Gojek))</span>
+                  </button>
+                </div>
+
+                <div className="pt-4 pb-16">
+                  <button
+                    type="button"
+                    onClick={() => setShowMoreFields(false)}
+                    className="w-full py-3 flex items-center justify-center gap-2 text-gray-600 font-medium text-[13px]"
+                  >
+                    Tampilkan Lebih Sedikit <ChevronUp size={16} />
+                  </button>
                 </div>
               </>
             )}
