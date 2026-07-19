@@ -92,8 +92,9 @@ export default function BarangList({
 
   return (
     <div className="bg-white h-full flex flex-col font-sans overflow-hidden border border-gray-200 shadow-sm m-4 md:m-6 rounded-lg relative">
-      <div className="p-4 md:p-6 flex-1 overflow-auto">
-        <div className="max-w-full mx-auto">
+      {/* Header (Static/Pinned at Top) */}
+      <div className="p-4 md:p-6 pb-2 shrink-0 border-b border-gray-100 bg-white z-10 flex flex-col">
+        <div className="max-w-full mx-auto w-full">
           {/* Header Action Buttons & Search */}
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
             <div className="flex flex-col gap-2.5">
@@ -174,10 +175,13 @@ export default function BarangList({
               </button>
             </div>
           )}
+        </div>
+      </div>
 
-          {/* Table */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto shadow-sm">
-            <table className="w-full text-left border-collapse min-w-[1100px]">
+      {/* Scrollable Table Area */}
+      <div className="flex-1 overflow-auto bg-gray-50/30 p-4 md:p-6">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm w-[max-content] min-w-full">
+          <table className="w-full text-left border-collapse min-w-[1100px]">
               <thead>
                 <tr className="border-b border-gray-200 text-[13px] text-gray-600 bg-[#F9FAFB]">
                   <th className="py-3.5 px-4 font-semibold w-10">
@@ -290,7 +294,6 @@ export default function BarangList({
               </tbody>
             </table>
           </div>
-          
         </div>
       </div>
 
