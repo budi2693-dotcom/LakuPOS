@@ -769,7 +769,7 @@ function DarkDashboard({
 function LightWrapper({ children, scrollable = false }: { children: React.ReactNode, scrollable?: boolean }) {
   return (
     <div
-      className={`h-full flex flex-col ${scrollable ? 'overflow-y-auto custom-scrollbar p-4 md:p-6' : 'overflow-hidden'}`}
+      className={`flex-1 min-h-0 w-full flex flex-col ${scrollable ? 'overflow-y-auto custom-scrollbar p-4 md:p-6' : 'overflow-hidden'}`}
       style={{ background: '#f9fafb' }}
     >
       {children}
@@ -1234,11 +1234,8 @@ export default function Backoffice({
         )}
 
         {/* Module Content */}
-        <main
-          className="flex-1 overflow-hidden relative animate-fade-in"
-          style={{ background: '#070B14' }}
-        >
-          <div className="h-full">{renderModule()}</div>
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative bg-[#0D1117]">
+          {renderModule()}
         </main>
       </div>
     </div>
