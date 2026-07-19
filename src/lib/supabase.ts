@@ -220,16 +220,34 @@ export async function supabaseGetProducts(): Promise<Product[]> {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase client is not configured.');
 
-  const { data, error } = await client
-    .from('products')
-    .select('*')
-    .order('created_at', { ascending: false });
+  let allData: any[] = [];
+  let from = 0;
+  const limit = 1000;
+  let hasMore = true;
 
-  if (error) {
-    throw new Error(`Gagal mengambil data dari Supabase: ${error.message}`);
+  while (hasMore) {
+    const { data, error } = await client
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(from, from + limit - 1);
+
+    if (error) {
+      throw new Error(`Gagal mengambil data dari Supabase: ${error.message}`);
+    }
+
+    if (data && data.length > 0) {
+      allData = [...allData, ...data];
+      from += limit;
+      if (data.length < limit) {
+        hasMore = false;
+      }
+    } else {
+      hasMore = false;
+    }
   }
 
-  return data as Product[];
+  return allData as Product[];
 }
 
 function sanitizeProductForSupabase(product: Product): any {
@@ -359,16 +377,34 @@ export async function supabaseGetStaffAccounts(): Promise<StaffAccount[]> {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase client is not configured.');
 
-  const { data, error } = await client
-    .from('staff_accounts')
-    .select('*')
-    .order('created_at', { ascending: false });
+  let allData: any[] = [];
+  let from = 0;
+  const limit = 1000;
+  let hasMore = true;
 
-  if (error) {
-    throw new Error(`Gagal mengambil data staf dari Supabase: ${error.message}`);
+  while (hasMore) {
+    const { data, error } = await client
+      .from('staff_accounts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(from, from + limit - 1);
+
+    if (error) {
+      throw new Error(`Gagal mengambil data staf dari Supabase: ${error.message}`);
+    }
+
+    if (data && data.length > 0) {
+      allData = [...allData, ...data];
+      from += limit;
+      if (data.length < limit) {
+        hasMore = false;
+      }
+    } else {
+      hasMore = false;
+    }
   }
 
-  return data as StaffAccount[];
+  return allData as StaffAccount[];
 }
 
 export async function supabaseAddStaffAccount(staff: StaffAccount): Promise<void> {
@@ -449,16 +485,34 @@ export async function supabaseGetTransactions(): Promise<Transaction[]> {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase client is not configured.');
 
-  const { data, error } = await client
-    .from('transactions')
-    .select('*')
-    .order('date', { ascending: false });
+  let allData: any[] = [];
+  let from = 0;
+  const limit = 1000;
+  let hasMore = true;
 
-  if (error) {
-    throw new Error(`Gagal mengambil transaksi dari Supabase: ${error.message}`);
+  while (hasMore) {
+    const { data, error } = await client
+      .from('transactions')
+      .select('*')
+      .order('date', { ascending: false })
+      .range(from, from + limit - 1);
+
+    if (error) {
+      throw new Error(`Gagal mengambil transaksi dari Supabase: ${error.message}`);
+    }
+
+    if (data && data.length > 0) {
+      allData = [...allData, ...data];
+      from += limit;
+      if (data.length < limit) {
+        hasMore = false;
+      }
+    } else {
+      hasMore = false;
+    }
   }
 
-  return (data as any[]).map(mapSupabaseToTransaction);
+  return allData.map(mapSupabaseToTransaction);
 }
 
 export async function supabaseAddTransaction(tx: Transaction): Promise<void> {
@@ -501,16 +555,34 @@ export async function supabaseGetCustomers(): Promise<Customer[]> {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase client is not configured.');
 
-  const { data, error } = await client
-    .from('customers')
-    .select('*')
-    .order('created_at', { ascending: false });
+  let allData: any[] = [];
+  let from = 0;
+  const limit = 1000;
+  let hasMore = true;
 
-  if (error) {
-    throw new Error(`Gagal mengambil data pelanggan dari Supabase: ${error.message}`);
+  while (hasMore) {
+    const { data, error } = await client
+      .from('customers')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(from, from + limit - 1);
+
+    if (error) {
+      throw new Error(`Gagal mengambil pelanggan dari Supabase: ${error.message}`);
+    }
+
+    if (data && data.length > 0) {
+      allData = [...allData, ...data];
+      from += limit;
+      if (data.length < limit) {
+        hasMore = false;
+      }
+    } else {
+      hasMore = false;
+    }
   }
 
-  return data as Customer[];
+  return allData as Customer[];
 }
 
 export async function supabaseAddCustomer(customer: Customer): Promise<void> {

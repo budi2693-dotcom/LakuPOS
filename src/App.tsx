@@ -332,7 +332,7 @@ export default function App() {
       if (dbConfig.mode === 'supabase') {
         const client = getSupabaseClient(dbConfig);
         if (client) {
-          const chunkSize = 1000;
+          const chunkSize = 100;
           for (let i = 0; i < ids.length; i += chunkSize) {
             const chunk = ids.slice(i, i + chunkSize);
             try {
