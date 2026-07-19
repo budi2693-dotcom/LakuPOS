@@ -35,7 +35,8 @@ interface ProductTableProps {
   onAddProduct: () => void;
   onEditProduct: (product: Product) => void;
   onDeleteProduct: (id: string) => void;
-  onClearAll: () => void;
+  onBulkDeleteProducts?: (ids: string[]) => void;
+  onClearAll?: () => void;
   onBulkImport: (products: Product[]) => void;
   isReadOnly?: boolean;
 }
@@ -45,6 +46,7 @@ export default function ProductTable({
   onAddProduct,
   onEditProduct,
   onDeleteProduct,
+  onBulkDeleteProducts,
   onClearAll,
   onBulkImport,
   isReadOnly = false,
@@ -174,7 +176,11 @@ export default function ProductTable({
   const handleBulkDelete = () => {
     const count = selectedIds.size;
     if (!confirm(`Hapus ${count} barang yang dipilih? Tindakan ini tidak dapat dibatalkan.`)) return;
-    selectedIds.forEach(id => onDeleteProduct(id));
+    if (onBulkDeleteProducts) {
+      onBulkDeleteProducts(Array.from(selectedIds));
+    } else {
+      alert("Fungsi hapus massal belum terkonfigurasi pada komponen ini.");
+    }
     setSelectedIds(new Set());
   };
 

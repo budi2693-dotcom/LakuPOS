@@ -95,8 +95,8 @@ export default function BarangList({
     if (!confirm(`Hapus ${count} barang yang dipilih? Tindakan ini tidak dapat dibatalkan.`)) return;
     if (onBulkDeleteProducts) {
       onBulkDeleteProducts(Array.from(selectedIds));
-    } else if (onDeleteProduct) {
-      selectedIds.forEach(id => onDeleteProduct(id));
+    } else {
+      alert("Fungsi hapus massal belum terkonfigurasi pada komponen ini.");
     }
     setSelectedIds(new Set());
   };
