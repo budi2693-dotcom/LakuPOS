@@ -307,39 +307,26 @@ export default function ProductImport({ onBack, onImportProducts }: ProductImpor
       width: c.width,
     }));
 
-    // ---- Baris 1: Header (merah untuk wajib, bold untuk semua) ----
+    // ---- Baris 1: Header ----
     const headerRow = worksheet.getRow(1);
     headerRow.height = 20;
     headerRow.eachCell((cell, colNumber) => {
       const col = KP_COLUMNS[colNumber - 1];
       cell.font = {
-        bold: true,
-        color: { argb: col?.mandatory ? 'FFCC0000' : 'FF000000' },
+        name: 'Arial',
+        size: 10,
+        color: { argb: col?.mandatory ? 'FFFF0000' : 'FF000000' }, // Merah untuk wajib, hitam untuk opsional
       };
-      cell.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: col?.mandatory ? 'FFFFCCCC' : 'FFEEEEEE' },
-      };
-      cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' },
-      };
+      // Tidak ada background fill
       cell.alignment = { vertical: 'middle', horizontal: 'left' };
     });
 
-    // ---- Baris 2: Instruksi (kuning, italic, wrap) ----
+    // ---- Baris 2: Instruksi ----
     const instrRow = worksheet.addRow(KP_COLUMNS.map((c) => c.instruction));
-    instrRow.height = 90;
+    instrRow.height = 120;
     instrRow.eachCell((cell) => {
-      cell.font = { italic: true, size: 9, color: { argb: 'FF333333' } };
-      cell.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FFFFFF99' },
-      };
+      cell.font = { name: 'Arial', size: 9, color: { argb: 'FF000000' } };
+      // Tidak ada background fill
       cell.border = {
         top: { style: 'thin' },
         left: { style: 'thin' },
@@ -349,33 +336,33 @@ export default function ProductImport({ onBack, onImportProducts }: ProductImpor
       cell.alignment = { wrapText: true, vertical: 'top' };
     });
 
-    // ---- Baris 3: Contoh data ----
-    const exampleRow = worksheet.addRow([
-      '',            // alasan_gagal
-      '8995227500247', // data_kode_barang
-      'LARUTAN J.BIJI 320ml CONTOH', // data_nama_barang
-      5000,          // data_harga_beli
-      6000,          // data_harga_jual
-      6,             // data_stok
-      0,             // data_barang_jasa
-      0,             // data_show_toko
-      0,             // minimum_stok
-      '0',           // tipe_diskon
-      0,             // diskon
-      'ml',          // berat_dan_satuan
-      1000,          // berat
-      'Y01',         // letak_rak
-      'Larutan cap kaki tiga anak membantu meredakan panas dalam', // keterangan
-      'minuman',     // kategori
-      '',            // gambar
-    ]);
-    exampleRow.eachCell((cell) => {
-      cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' },
-      };
+    // ---- Baris 3-6: Contoh data persis seperti screenshot Kasir Pintar ----
+    const exampleRows = [
+      [
+        '', '8995227500247', 'LARUTAN J.BIJI 320ml CONTOH', 5000, 6000, 6, 0, 0, 0, 0, 0, 'ml', 1000, 'Y01', 'Larutan cap kaki tiga anak membantu meredakan panas dalam', 'minuman', '😀'
+      ],
+      [
+        '', '2435rerddfrd', 'LARUTAN Cap Kaki Tiga CONTOH', 2500, 4000, 10, 0, 0, 0, 0, 0, 'kl', 100, '84j', '', 'minuman', ''
+      ],
+      [
+        '', '9556001051509', 'MILO KALENG 240ml CONTOH', 8000, 10000, 6, 1, 0, 0, 0, 0, '240 ml', 200, 'Y01', 'Susu milo menjadi minuman sehat dengan rasa coklat yang enak.', 'minuman', '😀'
+      ],
+      [
+        '', 'dfgd454', 'MILO KALENG 241ml CONTOH', 9000, 12000, 7, 0, 0, 0, 0, 50, '241 ml', 201, 'Y02', '', 'minuman', ''
+      ]
+    ];
+
+    exampleRows.forEach(rowData => {
+      const row = worksheet.addRow(rowData);
+      row.eachCell((cell) => {
+        cell.font = { name: 'Arial', size: 10 };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' },
+        };
+      });
     });
 
     // Freeze 2 baris pertama (header + instruksi)
