@@ -319,6 +319,49 @@ export default function App() {
     }
   };
 
+  const handleBulkDeleteProducts = async (ids: string[]) => {
+    let supabaseFailed = false;
+    let originalErrorMsg = '';
+
+    try {
+      setLoading(true);
+      for (const id of ids) {
+        await localDeleteProduct(id);
+      }
+
+      if (dbConfig.mode === 'supabase') {
+        const client = getSupabaseClient(dbConfig);
+        if (client) {
+          const chunkSize = 1000;
+          for (let i = 0; i < ids.length; i += chunkSize) {
+            const chunk = ids.slice(i, i + chunkSize);
+            try {
+              const { error } = await client.from('products').delete().in('id', chunk);
+              if (error) throw error;
+            } catch (e: any) {
+              supabaseFailed = true;
+              originalErrorMsg = e.message || 'Error Supabase';
+              break;
+            }
+          }
+        }
+      }
+
+      await loadData();
+
+      if (supabaseFailed) {
+        setErrorMessage(`Gagal menghapus ${ids.length} barang dari Supabase: ${originalErrorMsg}. Namun, barang berhasil dihapus dari komputer Anda (Lokal Offline).`);
+      } else {
+        triggerSuccess(`${ids.length} barang berhasil dihapus dari database.`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMessage(`Gagal menghapus barang: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 4. Handle Clear All Database Records
   const handleClearAll = async () => {
     setLoading(true);
@@ -596,6 +639,7 @@ export default function App() {
                 setShowFormModal(true);
               }}
               onDeleteProduct={handleDeleteProduct}
+              onBulkDeleteProducts={handleBulkDeleteProducts}
             />
           )}
 
@@ -760,7 +804,7 @@ export default function App() {
     );
   }
 
-  // â”€â”€ NEW: Backoffice route uses the dedicated Backoffice component â”€â”€
+  // ——— NEW: Backoffice route uses the dedicated Backoffice component ———
   return (
     <>
       <Backoffice
@@ -777,6 +821,7 @@ export default function App() {
           setShowFormModal(true);
         }}
         onDeleteProduct={handleDeleteProduct}
+        onBulkDeleteProducts={handleBulkDeleteProducts}
         onCancelTransaction={handleCancelTransaction}
         onRefreshData={handleRefreshAllData}
         onConfigChange={handleConfigChange}

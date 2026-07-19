@@ -10,6 +10,7 @@ interface BarangListProps {
   onToggleSidebar?: () => void;
   onGoToImportProduk?: () => void;
   onDeleteProduct?: (id: string) => void;
+  onBulkDeleteProducts?: (ids: string[]) => void;
 }
 
 // Generate a deterministic pastel color from a string
@@ -29,6 +30,7 @@ export default function BarangList({
   onEditProduct,
   onGoToImportProduk,
   onDeleteProduct,
+  onBulkDeleteProducts,
 }: BarangListProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -91,7 +93,9 @@ export default function BarangList({
   const handleBulkDelete = () => {
     const count = selectedIds.size;
     if (!confirm(`Hapus ${count} barang yang dipilih? Tindakan ini tidak dapat dibatalkan.`)) return;
-    if (onDeleteProduct) {
+    if (onBulkDeleteProducts) {
+      onBulkDeleteProducts(Array.from(selectedIds));
+    } else if (onDeleteProduct) {
       selectedIds.forEach(id => onDeleteProduct(id));
     }
     setSelectedIds(new Set());
