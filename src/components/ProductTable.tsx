@@ -19,7 +19,11 @@ import {
   FileSpreadsheet,
   Trash,
   HelpCircle,
-  FileCheck,
+  Eye,
+  X,
+  Package,
+  Tag,
+  ChevronRight,
 } from 'lucide-react';
 import { Product } from '../types';
 import { DEFAULT_CATEGORIES } from '../data';
@@ -48,8 +52,8 @@ export default function ProductTable({
   // Search, Filter, & Sort States
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedStockStatus, setSelectedStockStatus] = useState('all'); // all, instock, lowstock, outofstock
-  const [sortBy, setSortBy] = useState('created_at'); // name, sku, stock, price_sell, created_at
+  const [selectedStockStatus, setSelectedStockStatus] = useState('all');
+  const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
@@ -61,6 +65,11 @@ export default function ProductTable({
   const [csvError, setCsvError] = useState<string | null>(null);
   const [showImportHelp, setShowImportHelp] = useState(false);
   const [showBulkEditor, setShowBulkEditor] = useState(false);
+
+  // Multi-select & Detail States
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const [detailTab, setDetailTab] = useState<'data' | 'harga' | 'satuan' | 'varian' | 'paket' | 'bahan'>('data');
 
   // Format currency to Indonesian Rupiah
   const formatRupiah = (value: number) => {
@@ -132,6 +141,42 @@ export default function ProductTable({
   }, [processedProducts, currentPage, itemsPerPage]);
 
   const totalPages = Math.max(1, Math.ceil(processedProducts.length / itemsPerPage));
+
+  // Checkbox helpers
+  const allPageSelected = paginatedProducts.length > 0 && paginatedProducts.every(p => selectedIds.has(p.id));
+  const somePageSelected = paginatedProducts.some(p => selectedIds.has(p.id)) && !allPageSelected;
+
+  const toggleSelectAll = () => {
+    if (allPageSelected) {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        paginatedProducts.forEach(p => next.delete(p.id));
+        return next;
+      });
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        paginatedProducts.forEach(p => next.add(p.id));
+        return next;
+      });
+    }
+  };
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = () => {
+    const count = selectedIds.size;
+    if (!confirm(`Hapus ${count} barang yang dipilih? Tindakan ini tidak dapat dibatalkan.`)) return;
+    selectedIds.forEach(id => onDeleteProduct(id));
+    setSelectedIds(new Set());
+  };
 
   // Handle Sort Change
   const handleSort = (field: string) => {
@@ -470,6 +515,29 @@ export default function ProductTable({
         </div>
       </div>
 
+      {/* Bulk Delete Bar */}
+      {selectedIds.size > 0 && !isReadOnly && (
+        <div className="flex items-center gap-3 bg-red-600 text-white px-4 py-3 rounded-xl shadow">
+          <span className="font-semibold text-sm flex-1">
+            {selectedIds.size} barang dipilih
+          </span>
+          <button
+            onClick={handleBulkDelete}
+            className="flex items-center gap-1.5 bg-white text-red-600 px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-red-50 transition-colors cursor-pointer"
+          >
+            <Trash2 size={15} />
+            Hapus Barang Terpilih
+          </button>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="p-1.5 hover:bg-red-500 rounded-lg transition-colors cursor-pointer"
+            title="Batalkan pilihan"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
+
       {/* Main Catalog View Container */}
       {processedProducts.length === 0 ? (
         <div className="bg-white py-16 px-4 rounded-xl border border-gray-100 shadow-sm text-center">
@@ -502,6 +570,18 @@ export default function ProductTable({
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/75 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  {!isReadOnly && (
+                    <th className="py-3.5 pl-4 pr-2 w-10">
+                      <input
+                        type="checkbox"
+                        checked={allPageSelected}
+                        ref={el => { if (el) el.indeterminate = somePageSelected; }}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                        title="Pilih semua"
+                      />
+                    </th>
+                  )}
                   <th className="py-3.5 px-4 font-medium">Informasi Barang</th>
                   <th className="py-3.5 px-4 font-medium shrink-0">
                     <button
@@ -512,6 +592,7 @@ export default function ProductTable({
                     </button>
                   </th>
                   <th className="py-3.5 px-4 font-medium">Kategori</th>
+                  <th className="py-3.5 px-4 font-medium">Tipe Barang</th>
                   <th className="py-3.5 px-4 font-medium text-right">
                     <button
                       onClick={() => handleSort('price_sell')}
@@ -528,7 +609,6 @@ export default function ProductTable({
                       Stok <ArrowUpDown size={12} />
                     </button>
                   </th>
-                  <th className="py-3.5 px-4 font-medium">Rak/Lokasi</th>
                   <th className="py-3.5 px-4 font-medium text-center">Aksi</th>
                 </tr>
               </thead>
@@ -536,14 +616,35 @@ export default function ProductTable({
                 {paginatedProducts.map((p) => {
                   const isOutOfStock = p.use_stock !== false && p.stock === 0;
                   const isLowStock = p.use_stock !== false && p.stock > 0 && p.stock <= p.min_stock;
+                  const isSelected = selectedIds.has(p.id);
+                  const itemType = p.item_type || 'Default';
+
+                  const itemTypeBadgeColor: Record<string, string> = {
+                    Default: 'bg-gray-100 text-gray-600',
+                    Multisatuan: 'bg-blue-50 text-blue-600',
+                    Varian: 'bg-purple-50 text-purple-600',
+                    Bundle: 'bg-orange-50 text-orange-600',
+                    Jasa: 'bg-teal-50 text-teal-600',
+                  };
 
                   return (
                     <tr
                       key={p.id}
-                      className="hover:bg-gray-50/50 transition-colors group"
+                      className={`hover:bg-gray-50/50 transition-colors group ${isSelected ? 'bg-teal-50/40' : ''}`}
                     >
+                      {!isReadOnly && (
+                        <td className="py-3 pl-4 pr-2 w-10">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelectOne(p.id)}
+                            className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                          />
+                        </td>
+                      )}
+
                       {/* Image + Name + Description */}
-                      <td className="py-3 px-4 max-w-[280px] lg:max-w-[360px]">
+                      <td className="py-3 px-4 max-w-[260px]">
                         <div className="flex items-center gap-3">
                           {p.image_url ? (
                             <img
@@ -553,18 +654,16 @@ export default function ProductTable({
                               className="w-10 h-10 rounded-lg object-cover bg-gray-50 border border-gray-100 shrink-0"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 shrink-0 text-xs font-semibold">
+                            <div className="w-10 h-10 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600 shrink-0 text-xs font-bold">
                               {p.name.substring(0, 2).toUpperCase()}
                             </div>
                           )}
                           <div className="truncate">
-                            <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                            <p className="font-semibold text-gray-900 group-hover:text-teal-600 transition-colors truncate">
                               {p.name}
                             </p>
                             {p.description ? (
-                              <p className="text-xs text-gray-400 truncate mt-0.5">
-                                {p.description}
-                              </p>
+                              <p className="text-xs text-gray-400 truncate mt-0.5">{p.description}</p>
                             ) : (
                               <span className="text-[10px] italic text-gray-300">Tidak ada deskripsi</span>
                             )}
@@ -573,9 +672,7 @@ export default function ProductTable({
                       </td>
 
                       {/* SKU */}
-                      <td className="py-3 px-4 font-mono text-xs font-semibold text-gray-600">
-                        {p.sku}
-                      </td>
+                      <td className="py-3 px-4 font-mono text-xs font-semibold text-gray-600">{p.sku}</td>
 
                       {/* Category */}
                       <td className="py-3 px-4">
@@ -584,72 +681,65 @@ export default function ProductTable({
                         </span>
                       </td>
 
+                      {/* Tipe Barang */}
+                      <td className="py-3 px-4">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${itemTypeBadgeColor[itemType] || itemTypeBadgeColor.Default}`}>
+                          <Package size={10} />
+                          {itemType}
+                        </span>
+                      </td>
+
                       {/* Price Sell */}
                       <td className="py-3 px-4 text-right font-semibold text-gray-900">
                         {formatRupiah(p.price_sell)}
-                        <p className="text-[10px] text-gray-400 font-normal mt-0.5">
-                          Beli: {formatRupiah(p.price_buy)}
-                        </p>
+                        <p className="text-[10px] text-gray-400 font-normal mt-0.5">Beli: {formatRupiah(p.price_buy)}</p>
                       </td>
 
                       {/* Stock Level */}
                       <td className="py-3 px-4 text-center">
                         <div className="inline-flex flex-col items-center">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${
-                              isOutOfStock
-                                ? 'bg-red-50 text-red-600 border border-red-100'
-                                : isLowStock
-                                ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                                : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                            }`}
-                          >
-                            {p.use_stock !== false ? `${p.stock} unit` : 'Tak Terbatas'}
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${
+                            isOutOfStock ? 'bg-red-50 text-red-600 border border-red-100'
+                            : isLowStock ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                            : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                          }`}>
+                            {p.use_stock !== false ? `${p.stock}` : '∞'}
                           </span>
-                          {isLowStock && (
-                            <span className="text-[9px] text-amber-500 font-semibold mt-0.5">
-                              Min: {p.min_stock}
-                            </span>
-                          )}
-                          {isOutOfStock && (
-                            <span className="text-[9px] text-red-500 font-semibold mt-0.5">
-                              Habis
-                            </span>
-                          )}
+                          {isLowStock && <span className="text-[9px] text-amber-500 font-semibold mt-0.5">Min: {p.min_stock}</span>}
+                          {isOutOfStock && <span className="text-[9px] text-red-500 font-semibold mt-0.5">Habis</span>}
                         </div>
-                      </td>
-
-                      {/* Location */}
-                      <td className="py-3 px-4 text-xs font-medium text-gray-500">
-                        {p.location || <span className="text-gray-300">-</span>}
                       </td>
 
                       {/* Actions */}
                       <td className="py-3 px-4 text-center">
-                        {!isReadOnly ? (
-                          <div className="flex items-center justify-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => onEditProduct(p)}
-                              className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer transition-colors"
-                              title="Edit Barang"
-                            >
-                              <Edit2 size={15} />
-                            </button>
-                            <button
-                              onClick={() => {
-                               if (confirm(`Hapus ${p.name}?`)) {
-                                 onDeleteProduct(p.id);
-                               }
-                              }}
-                              className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer transition-colors"
-                              title="Hapus Barang"
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-400 italic">Terkunci</span>
-                        )}
+                        <div className="flex items-center justify-center gap-1">
+                          {/* Detail button */}
+                          <button
+                            onClick={() => { setDetailProduct(p); setDetailTab('data'); }}
+                            className="px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded text-xs font-semibold cursor-pointer transition-colors"
+                            title="Detail Barang"
+                          >
+                            Detail
+                          </button>
+                          {!isReadOnly && (
+                            <>
+                              <button
+                                onClick={() => onEditProduct(p)}
+                                className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer transition-colors"
+                                title="Edit Barang"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                              <button
+                                onClick={() => { if (confirm(`Hapus ${p.name}?`)) onDeleteProduct(p.id); }}
+                                className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer transition-colors"
+                                title="Hapus Barang"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -841,6 +931,191 @@ export default function ProductTable({
           }}
           onClose={() => setShowBulkEditor(false)}
         />
+      )}
+
+      {/* ============================================================
+          DETAIL SIDEBAR PANEL
+      ============================================================ */}
+      {detailProduct && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black/30 z-40"
+            onClick={() => setDetailProduct(null)}
+          />
+          {/* Panel */}
+          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col overflow-hidden">
+            {/* Panel Header */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white shrink-0">
+              {/* Avatar */}
+              {detailProduct.image_url ? (
+                <img src={detailProduct.image_url} alt={detailProduct.name}
+                  className="w-12 h-12 rounded-xl object-cover border border-gray-100 shrink-0" />
+              ) : (
+                <div className="w-12 h-12 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600 font-bold text-base shrink-0">
+                  {detailProduct.name.substring(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-gray-900 truncate text-sm">{detailProduct.name}</p>
+                <p className="text-xs text-gray-500 font-mono">{detailProduct.sku}</p>
+              </div>
+              {/* Actions in header */}
+              {!isReadOnly && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => { onEditProduct(detailProduct); setDetailProduct(null); }}
+                    className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors"
+                  >
+                    Edit Barang
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm(`Hapus ${detailProduct.name}?`)) {
+                        onDeleteProduct(detailProduct.id);
+                        setDetailProduct(null);
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-bold cursor-pointer transition-colors border border-red-200"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={() => setDetailProduct(null)}
+                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer ml-1"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-gray-100 bg-white shrink-0 overflow-x-auto">
+              {([
+                { key: 'data', label: 'Data Barang' },
+                { key: 'harga', label: 'Tipe Harga' },
+                { key: 'satuan', label: 'Multi Satuan' },
+                { key: 'varian', label: 'Varian' },
+                { key: 'paket', label: 'Paket' },
+                { key: 'bahan', label: 'Bahan Baku' },
+              ] as { key: typeof detailTab; label: string }[]).map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setDetailTab(tab.key)}
+                  className={`px-4 py-2.5 text-xs font-semibold shrink-0 border-b-2 transition-colors cursor-pointer ${
+                    detailTab === tab.key
+                      ? 'border-teal-600 text-teal-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab Content */}
+            <div className="flex-1 overflow-y-auto">
+              {detailTab === 'data' && (
+                <div className="p-4 space-y-0">
+                  {/* Info rows */}
+                  {([
+                    { label: 'Kode', value: detailProduct.sku },
+                    { label: 'Nama', value: detailProduct.name },
+                    { label: 'Tipe Barang', value: detailProduct.item_type || 'Default' },
+                    { label: 'Kategori', value: detailProduct.category },
+                    { label: 'Harga Beli', value: `Rp ${(detailProduct.price_buy || 0).toLocaleString('id-ID')}` },
+                    { label: 'Harga Jual', value: `Rp ${(detailProduct.price_sell || 0).toLocaleString('id-ID')}` },
+                    { label: 'Diskon', value: detailProduct.discount ? `${detailProduct.discount}${detailProduct.discount_type || '%'}` : '0%' },
+                    { label: 'Jenis Stok (Barang/Jasa)', value: detailProduct.use_stock === false ? 'Jasa (Unlimited)' : 'Barang (Limited Stock)' },
+                    { label: 'Stok', value: detailProduct.use_stock !== false ? String(detailProduct.stock) : '∞' },
+                    { label: 'Batas Minimum Stok', value: String(detailProduct.min_stock || 0) },
+                    { label: 'Satuan', value: (detailProduct.units && detailProduct.units.length > 0) ? detailProduct.units[0].unitName : '-' },
+                    { label: 'Letak Rak', value: detailProduct.location || '-' },
+                    { label: 'Keterangan', value: detailProduct.description || '-' },
+                    { label: 'Tampilkan di Toko', value: detailProduct.show_in_transaction !== false ? 'Tampil' : 'Tersembunyi' },
+                    { label: 'Dibuat', value: detailProduct.created_at ? new Date(detailProduct.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-' },
+                  ]).map(row => (
+                    <div key={row.label} className="flex items-start py-2.5 border-b border-gray-50">
+                      <span className="text-xs text-gray-500 w-44 shrink-0">{row.label}</span>
+                      <span className="text-xs font-semibold text-gray-900 flex-1">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {detailTab === 'harga' && (
+                <div className="p-4 space-y-3">
+                  <p className="text-xs text-gray-500 mb-2">Harga berdasarkan tipe pelanggan</p>
+                  {([
+                    { label: 'Harga Umum', value: detailProduct.price_sell },
+                    { label: 'Harga Member', value: detailProduct.price_sell_member },
+                    { label: 'Harga Grosir', value: detailProduct.price_sell_grosir },
+                    { label: 'Harga Agen', value: detailProduct.price_sell_agen },
+                  ]).map(row => (
+                    <div key={row.label} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2.5">
+                      <span className="text-xs text-gray-600">{row.label}</span>
+                      <span className="text-sm font-bold text-gray-900">
+                        {row.value ? `Rp ${row.value.toLocaleString('id-ID')}` : <span className="text-gray-400 font-normal text-xs">Belum diatur</span>}
+                      </span>
+                    </div>
+                  ))}
+                  {detailProduct.price_tiers && detailProduct.price_tiers.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs font-semibold text-gray-700 mb-2">Tier Harga</p>
+                      {detailProduct.price_tiers.map(tier => (
+                        <div key={tier.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 mb-1.5">
+                          <span className="text-xs text-gray-600">{tier.customerType} — min {tier.minQty} pcs</span>
+                          <span className="text-xs font-bold text-gray-900">Rp {tier.price.toLocaleString('id-ID')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {detailTab === 'satuan' && (
+                <div className="p-4">
+                  {detailProduct.units && detailProduct.units.length > 0 ? (
+                    <div className="space-y-2">
+                      {detailProduct.units.map((unit, idx) => (
+                        <div key={unit.id} className="bg-gray-50 rounded-lg px-3 py-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-bold text-gray-900">{unit.unitName}</span>
+                            {idx > 0 && <span className="text-xs text-gray-500">× {unit.conversionMultiplier}</span>}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">Harga Jual: Rp {unit.price_sell_umum.toLocaleString('id-ID')}</p>
+                          {unit.sku_unit && <p className="text-xs font-mono text-gray-400 mt-0.5">{unit.sku_unit}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 text-gray-400">
+                      <Package size={32} className="mx-auto mb-2 opacity-40" />
+                      <p className="text-sm">Barang ini tidak menggunakan Multisatuan</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {(detailTab === 'varian' || detailTab === 'paket' || detailTab === 'bahan') && (
+                <div className="flex flex-col items-center justify-center h-48 text-gray-400 p-4">
+                  <Tag size={32} className="mb-2 opacity-30" />
+                  <p className="text-sm font-medium">Fitur ini belum diatur</p>
+                  <p className="text-xs mt-1 text-gray-400 text-center">Klik Edit Barang untuk mengatur fitur ini dari form lengkap</p>
+                  {!isReadOnly && (
+                    <button
+                      onClick={() => { onEditProduct(detailProduct); setDetailProduct(null); }}
+                      className="mt-3 px-4 py-2 bg-teal-600 text-white rounded-lg text-xs font-semibold cursor-pointer hover:bg-teal-700"
+                    >
+                      Edit Barang
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

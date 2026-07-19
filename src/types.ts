@@ -41,6 +41,7 @@ export interface Product {
   price_sell_agen?: number;
   price_tiers?: PriceTier[];
   product_type?: 'physical' | 'service' | 'bundle';
+  item_type?: 'Default' | 'Multisatuan' | 'Varian' | 'Bundle' | 'Jasa';
   use_stock?: boolean;
   units?: ProductUnit[];
   bundle_items?: BundleItem[];

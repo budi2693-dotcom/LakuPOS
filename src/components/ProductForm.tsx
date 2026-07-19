@@ -191,7 +191,8 @@ export default function ProductForm({
         setProductType('Multisatuan');
         setBaseUnitName(product.units[0].unitName);
         setBaseUnitBarcode(product.units[0].sku_unit || '');
-
+      } else if (product.item_type) {
+        setProductType(product.item_type);
       }
     } else {
       setSku('');
@@ -362,6 +363,7 @@ export default function ProductForm({
       show_in_transaction: showInTransaction,
       image_url: imageUrl,
       product_type: productType === 'Paket' ? 'bundle' : 'physical',
+      item_type: productType as Product['item_type'],
       units: productType === 'Multisatuan' ? units : [],
       bundle_items: product?.bundle_items || []
     };
