@@ -66,6 +66,7 @@ export interface BackofficeProps {
   dbConfig: DatabaseConfig;
   onAddProduct: () => void;
   onEditProduct: (p: Product) => void;
+  onDeleteProduct: (id: string) => void;
   onCancelTransaction: (txId: string, items: TransactionItem[]) => Promise<void>;
   onRefreshData: () => Promise<void>;
   onConfigChange: (config: DatabaseConfig) => void;
@@ -786,6 +787,7 @@ export default function Backoffice({
   dbConfig,
   onAddProduct,
   onEditProduct,
+  onDeleteProduct,
   onCancelTransaction,
   onRefreshData,
   onConfigChange,
@@ -930,6 +932,7 @@ export default function Backoffice({
               onToggleSidebar={() => setIsSidebarOpen(true)}
               onAddProduct={onAddProduct}
               onEditProduct={onEditProduct}
+              onDeleteProduct={onDeleteProduct}
               onGoToImportProduk={() => setActiveModule('import-produk')}
             />
           </LightWrapper>

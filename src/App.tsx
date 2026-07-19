@@ -776,6 +776,7 @@ export default function App() {
           setEditingProduct(p);
           setShowFormModal(true);
         }}
+        onDeleteProduct={handleDeleteProduct}
         onCancelTransaction={handleCancelTransaction}
         onRefreshData={handleRefreshAllData}
         onConfigChange={handleConfigChange}
